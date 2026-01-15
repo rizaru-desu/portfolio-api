@@ -1,0 +1,76 @@
+# =============================================================================
+# Stage 1: Builder - Build the NestJS application
+# =============================================================================
+FROM node:20-alpine AS builder
+
+# Install build dependencies for native modules (argon2, etc.)
+RUN apk add --no-cache python3 make g++ openssl
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install ALL dependencies (including devDependencies for build)
+# Using npm ci for faster, reproducible installs
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build the NestJS application (TypeScript -> JavaScript)
+RUN npm run build
+
+# Remove devDependencies to reduce size for production
+RUN npm prune --production
+
+# =============================================================================
+# Stage 2: Production - Minimal runtime image
+# =============================================================================
+FROM node:20-alpine AS production
+
+# Install runtime dependencies
+RUN apk add --no-cache openssl dumb-init
+
+# Create non-root user for running the application
+# Using 'node' user that already exists in node:alpine (UID 1000)
+USER node
+
+# Set working directory with proper ownership
+WORKDIR /app
+
+# Copy package files
+COPY --chown=node:node package*.json ./
+
+# Copy production dependencies from builder
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+
+# Copy Prisma schema and generated client
+COPY --chown=node:node --from=builder /app/prisma ./prisma
+COPY --chown=node:node --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copy built application from builder stage
+COPY --chown=node:node --from=builder /app/dist ./dist
+
+# Environment variables
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Expose application port
+EXPOSE 3000
+
+# Use dumb-init to handle signals properly
+# This ensures graceful shutdown of Node.js process
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# Start the application
+CMD ["node", "dist/main.js"]
+
+# Health check (optional - adjust endpoint as needed)
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+#   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
