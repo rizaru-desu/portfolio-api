@@ -29,6 +29,9 @@ RUN pnpm prisma generate
 # Build the NestJS application (TypeScript -> JavaScript)
 RUN pnpm run build
 
+# Approve builds (for NestJS build verification)
+RUN pnpm approve-builds || true
+
 # Remove devDependencies to reduce size for production
 RUN pnpm prune --prod
 
@@ -53,9 +56,8 @@ COPY --chown=node:node --from=builder /app/package.json ./package.json
 # Copy production dependencies from builder
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 
-# Copy Prisma schema and generated client
+# Copy Prisma schema
 COPY --chown=node:node --from=builder /app/prisma ./prisma
-COPY --chown=node:node --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy built application from builder stage (dist folder)
 COPY --chown=node:node --from=builder /app/dist ./dist
