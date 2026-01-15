@@ -47,8 +47,8 @@ USER node
 # Set working directory with proper ownership
 WORKDIR /app
 
-# Copy package files
-COPY --chown=node:node package*.json ./
+# Copy package.json from builder (needed for node_modules resolution)
+COPY --chown=node:node --from=builder /app/package.json ./package.json
 
 # Copy production dependencies from builder
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
@@ -57,7 +57,7 @@ COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/prisma ./prisma
 COPY --chown=node:node --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Copy built application from builder stage
+# Copy built application from builder stage (dist folder)
 COPY --chown=node:node --from=builder /app/dist ./dist
 
 # Environment variables
