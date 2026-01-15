@@ -6,28 +6,31 @@ FROM node:20-alpine AS builder
 # Install build dependencies for native modules (argon2, etc.)
 RUN apk add --no-cache python3 make g++ openssl
 
+# Install pnpm globally
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Set working directory
 WORKDIR /app
 
 # Copy package files for dependency installation
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
 # Install ALL dependencies (including devDependencies for build)
-# Using npm ci for faster, reproducible installs
-RUN npm ci
+# Using pnpm install --frozen-lockfile for reproducible installs
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN pnpm prisma generate
 
 # Build the NestJS application (TypeScript -> JavaScript)
-RUN npm run build
+RUN pnpm run build
 
 # Remove devDependencies to reduce size for production
-RUN npm prune --production
+RUN pnpm prune --prod
 
 # =============================================================================
 # Stage 2: Production - Minimal runtime image
