@@ -1,0 +1,200 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Authentication Provider Enum
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+  GITHUB
+}
+
+// Two-Factor Authentication Type Enum
+enum TwoFactorType {
+  TOTP
+  EMAIL
+}
+
+// User Role Enum
+enum UserRole {
+  OWNER
+  ADMIN
+  USER
+}
+
+// ====================
+// User Model (Identity-level data)
+// ====================
+model User {
+  id              String    @id @default(cuid())
+  name            String
+  username        String    @unique
+  email           String    @unique
+  image           String?
+  role            UserRole  @default(USER)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  account        Account?
+  sessions       Session[]
+  twoFactorAuths TwoFactorAuth[]
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
+
+// ====================
+// Account Model (Authentication-level data)
+// ====================
+model Account {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  passwordHash String
+  provider     AuthProvider @default(CREDENTIALS)
+  lastLoginAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+// ====================
+// Session Model (Session tracking)
+// ====================
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  deviceInfo String?
+  ipAddress  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ====================
+// Login Attempt Model (Security tracking)
+// ====================
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String // email or username
+  ipAddress  String?
+  success    Boolean
+  createdAt  DateTime @default(now())
+
+  @@index([identifier])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("login_attempts")
+}
+
+// ====================
+// Two-Factor Authentication Model
+// ====================
+model TwoFactorAuth {
+  id            String         @id @default(cuid())
+  userId        String
+  type          TwoFactorType
+  secret        String // Encrypted TOTP secret or email identifier
+  enabled       Boolean        @default(false)
+  recoveryCodes Json? // Array of hashed recovery codes
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("two_factor_auths")
+}
+
+// ====================
+// Email OTP Model
+// ====================
+model EmailOTP {
+  id         String   @id @default(cuid())
+  userId     String
+  otpHash    String // Hashed OTP
+  attempts   Int      @default(0)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_otps")
+}
+
+// ====================
+// Audit Log Model
+// ====================
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String // '2fa_enabled', '2fa_disabled', '2fa_verified', etc.
+  method     String? // 'google', 'email', 'recovery'
+  success    Boolean
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json? // Additional context data
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ====================
+// Verification Token Model
+// ====================
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("verification_tokens")
+}
+
+// ====================
+// Password Reset Token Model
+// ====================
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
