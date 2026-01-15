@@ -3,13 +3,13 @@
 # =============================================================================
 # This file reduces build context size by 50-70%, speeding up builds significantly
 
-# Node.js
+# Node.js / pnpm
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
-.pnpm-debug.log*
+pnpm-debug.log*
+.pnpm-store
 
 # Development
 .env
