@@ -177,6 +177,9 @@ jobs:
     needs: build-and-push
     # Only deploy on push to main (not on PRs)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: Production
+      url: https://ssh.rizaru-desu.my.id
 
     steps:
       # -----------------------------------------------------------------------
