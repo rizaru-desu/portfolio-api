@@ -32,8 +32,9 @@ RUN pnpm run build
 # Approve builds (for NestJS build verification)
 RUN pnpm approve-builds || true
 
-# Remove devDependencies to reduce size for production
-RUN pnpm prune --prod
+# Remove node_modules and reinstall only production dependencies
+# This ensures clean production dependencies without dev packages
+RUN rm -rf node_modules && pnpm install --prod --no-frozen-lockfile
 
 # =============================================================================
 # Stage 2: Production - Minimal runtime image
