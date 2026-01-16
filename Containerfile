@@ -36,6 +36,10 @@ RUN pnpm approve-builds || true
 # This ensures clean production dependencies without dev packages
 RUN rm -rf node_modules && pnpm install --prod --no-frozen-lockfile
 
+# Regenerate Prisma Client after production install
+# Note: We need to temporarily install prisma to generate the client
+RUN pnpm add -D prisma && pnpm prisma generate
+
 # =============================================================================
 # Stage 2: Production - Minimal runtime image
 # =============================================================================
