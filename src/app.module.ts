@@ -3,7 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
-import { NotFoundController } from './common/controllers/not-found.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
@@ -48,7 +47,7 @@ import { validate } from './config/env.validation';
     AuthModule,
     CaslModule,
   ],
-  controllers: [NotFoundController],
+  controllers: [],
   providers: [],
 })
 export class AppModule {}
