@@ -246,27 +246,23 @@ jobs:
             podman stop portfolio-api 2>/dev/null || true
             podman rm portfolio-api 2>/dev/null || true
             
-            # Run new container with environment variables
+            echo "Creating env file..."
+            cat > .env.production << 'ENVEOF'
+            $ENV_APP
+            ENVEOF
+
             echo "Starting new container..."
             podman run -d \
               --name portfolio-api \
               --publish 3000:3000 \
               --restart=always \
-              --env NODE_ENV=production \
-              --env DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-              --env REDIS_URL="${{ secrets.REDIS_URL }}" \
-              --env JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              --env SMTP_HOST="${{ secrets.SMTP_HOST }}" \
-              --env SMTP_PORT="${{ secrets.SMTP_PORT }}" \
-              --env SMTP_USER="${{ secrets.SMTP_USER }}" \
-              --env SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}" \
-              --env SMTP_FROM="${{ secrets.SMTP_FROM }}" \
+              --env-file .env.production \
               --health-cmd="curl -f http://localhost:3000 || exit 1" \
               --health-interval=30s \
               --health-timeout=3s \
               --health-retries=3 \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            
+              $REGISTRY/$IMAGE_NAME:latest
+                        
             # Wait for container to be healthy
             echo "Waiting for container to be healthy..."
             sleep 5
