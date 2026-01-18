@@ -31,9 +31,10 @@ module.exports = {
         PORT: 3000,
         TZ: 'Asia/Jakarta',
 
-        // Node.js Memory and Performance Tuning for ARM
-        NODE_OPTIONS:
-          '--max-old-space-size=384 --optimize-for-size --gc-interval=100',
+        // Node.js Memory Optimization for ARM (ONLY allowed flags in NODE_OPTIONS)
+        // ⚠️ CRITICAL: --optimize-for-size is NOT allowed in NODE_OPTIONS
+        // Only use flags that are permitted: https://nodejs.org/api/cli.html#node_optionsoptions
+        NODE_OPTIONS: '--max-old-space-size=384',
 
         // UV_THREADPOOL_SIZE: Reduce from default 4 to 2 for low-resource devices
         UV_THREADPOOL_SIZE: 2,
@@ -103,14 +104,6 @@ module.exports = {
 
       // Reduce instance variable size
       instance_var: 'INSTANCE_ID',
-
-      // Interpreter args (Node.js flags for ARM optimization)
-      node_args: [
-        '--max-old-space-size=384', // Limit heap to 384MB
-        '--optimize-for-size', // Prefer size over speed
-        '--gc-interval=100', // Aggressive garbage collection
-        '--max-semi-space-size=16', // Limit young generation
-      ].join(' '),
 
       // =================================================================
       // Error Handling
