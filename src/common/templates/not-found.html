@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="404 Page Not Found - Wrong Path" />
+    <title>404 – Wrong Path</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      @keyframes scanline {
+        0% {
+          transform: translateY(-100%);
+        }
+        100% {
+          transform: translateY(100vh);
+        }
+      }
+
+      @keyframes flicker {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.95;
+        }
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          text-shadow:
+            0 0 10px #0f0,
+            0 0 20px #0f0,
+            0 0 30px #0f0;
+        }
+        50% {
+          text-shadow:
+            0 0 20px #0f0,
+            0 0 30px #0f0,
+            0 0 40px #0f0;
+        }
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        background: #0a0a0a;
+        color: #0f0;
+        overflow-x: hidden;
+        position: relative;
+        animation: flicker 0.15s infinite;
+      }
+
+      /* CRT Effect */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 255, 0, 0.05) 0px,
+          transparent 1px,
+          transparent 2px,
+          rgba(0, 255, 0, 0.05) 3px
+        );
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      /* Scanline */
+      body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        background: linear-gradient(
+          transparent 0%,
+          rgba(0, 255, 0, 0.1) 50%,
+          transparent 100%
+        );
+        pointer-events: none;
+        z-index: 999;
+        animation: scanline 6s linear infinite;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 2px solid #0f0;
+        background: rgba(0, 255, 0, 0.02);
+        box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+      }
+
+      h1 {
+        font-size: clamp(2rem, 8vw, 4rem);
+        margin-bottom: 10px;
+        animation: glow 2s ease-in-out infinite;
+        letter-spacing: 3px;
+      }
+
+      .error-code {
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        color: #0d0;
+        margin: 10px 0;
+      }
+
+      .path-info {
+        font-size: clamp(0.75rem, 2vw, 1rem);
+        color: #0b0;
+        margin: 5px 0;
+        word-break: break-all;
+      }
+
+      .game-container {
+        margin: 30px auto;
+        padding: 20px;
+        border: 3px solid #0f0;
+        background: rgba(0, 0, 0, 0.8);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        position: relative;
+      }
+
+      .game-title {
+        text-align: center;
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        margin-bottom: 15px;
+        color: #0ff;
+      }
+
+      .instructions {
+        text-align: center;
+        font-size: clamp(0.75rem, 2vw, 1rem);
+        margin-bottom: 15px;
+        color: #0d0;
+      }
+
+      #gameCanvas {
+        display: block;
+        margin: 0 auto;
+        border: 2px solid #0f0;
+        background: #000;
+        max-width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+      }
+
+      .message {
+        text-align: center;
+        margin-top: 15px;
+        min-height: 30px;
+        font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+        color: #ff0;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-family: 'Courier New', monospace;
+        font-size: clamp(0.875rem, 2vw, 1rem);
+        font-weight: bold;
+        background: #000;
+        color: #0f0;
+        border: 2px solid #0f0;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      button:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+      }
+
+      button:active {
+        transform: scale(0.95);
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding: 20px;
+        font-size: clamp(0.75rem, 2vw, 0.875rem);
+        color: #0b0;
+        border-top: 1px solid #0f0;
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 600px) {
+        .container {
+          padding: 10px;
+        }
+
+        .header {
+          padding: 15px;
+          margin-bottom: 20px;
+        }
+
+        .game-container {
+          padding: 15px;
+          margin: 20px auto;
+        }
+
+        h1 {
+          letter-spacing: 1px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>404 – WRONG PATH</h1>
+        <div class="error-code">&gt; ERROR: PATH_NOT_FOUND</div>
+        <div class="path-info">&gt; Requested: {{PATH}}</div>
+        <div class="path-info">&gt; Timestamp: {{TIMESTAMP}}</div>
+      </div>
+
+      <div class="game-container">
+        <div class="game-title">▼ NAVIGATE THE MAZE ▼</div>
+        <div class="instructions">
+          Use Arrow Keys or WASD to move • Find the Portal!
+        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div class="message" id="message"></div>
+        <div class="controls">
+          <button onclick="resetGame()">⟳ Restart Game</button>
+          <button onclick="toggleSound()">
+            🔊 Sound: <span id="soundStatus">OFF</span>
+          </button>
+          <button onclick="window.location.href = '/'">⌂ Back to Home</button>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          &gt; SYSTEM MESSAGE: The path you seek does not exist in this
+          dimension.
+        </p>
+        <p>&gt; Tip: Complete the maze to find your way back home!</p>
+      </div>
+    </div>
+
+    <script>
+      // Game Configuration
+      const CELL_SIZE = 40;
+      const GRID_SIZE = 10;
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const messageEl = document.getElementById('message');
+
+      let soundEnabled = false;
+
+      // Game state
+      let player = { x: 0, y: 0 };
+      let portal = { x: 9, y: 9 };
+      let gameWon = false;
+
+      // Maze walls (1 = wall, 0 = path)
+      const maze = [
+        [0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+      ];
+
+      // Dead ends with custom messages
+      const deadEnds = [
+        { x: 2, y: 0, msg: 'Wrong way! Try another path.' },
+        { x: 9, y: 1, msg: 'Dead end! Turn back!' },
+        { x: 9, y: 2, msg: "This isn't the way home..." },
+        { x: 9, y: 3, msg: 'Nope! Keep searching!' },
+        { x: 9, y: 5, msg: 'Another wrong turn!' },
+      ];
+
+      // Audio Context for sound effects
+      let audioCtx = null;
+
+      function initAudio() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      function playSound(frequency, duration, type = 'sine') {
+        if (!soundEnabled || !audioCtx) return;
+
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = type;
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioCtx.currentTime + duration,
+        );
+
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + duration);
+      }
+
+      function drawGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw maze
+        for (let y = 0; y < GRID_SIZE; y++) {
+          for (let x = 0; x < GRID_SIZE; x++) {
+            if (maze[y][x] === 1) {
+              // Wall
+              ctx.fillStyle = '#0f0';
+              ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+              ctx.strokeStyle = '#000';
+              ctx.strokeRect(
+                x * CELL_SIZE,
+                y * CELL_SIZE,
+                CELL_SIZE,
+                CELL_SIZE,
+              );
+            } else {
+              // Path
+              ctx.fillStyle = '#001100';
+              ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+              ctx.strokeStyle = '#003300';
+              ctx.strokeRect(
+                x * CELL_SIZE,
+                y * CELL_SIZE,
+                CELL_SIZE,
+                CELL_SIZE,
+              );
+            }
+          }
+        }
+
+        // Draw dead ends
+        deadEnds.forEach((de) => {
+          ctx.fillStyle = '#ff0033';
+          ctx.fillRect(
+            de.x * CELL_SIZE + 5,
+            de.y * CELL_SIZE + 5,
+            CELL_SIZE - 10,
+            CELL_SIZE - 10,
+          );
+        });
+
+        // Draw portal
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(
+          portal.x * CELL_SIZE + CELL_SIZE / 2,
+          portal.y * CELL_SIZE + CELL_SIZE / 2,
+          CELL_SIZE / 3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.strokeStyle = '#0ff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw player
+        ctx.fillStyle = gameWon ? '#ffff00' : '#00ff00';
+        ctx.beginPath();
+        ctx.arc(
+          player.x * CELL_SIZE + CELL_SIZE / 2,
+          player.y * CELL_SIZE + CELL_SIZE / 2,
+          CELL_SIZE / 3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.strokeStyle = gameWon ? '#ff0' : '#0f0';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      function movePlayer(dx, dy) {
+        if (gameWon) return;
+
+        const newX = player.x + dx;
+        const newY = player.y + dy;
+
+        // Check boundaries
+        if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) {
+          messageEl.textContent = "⚠ Can't go outside the maze!";
+          playSound(100, 0.1, 'triangle');
+          return;
+        }
+
+        // Check walls
+        if (maze[newY][newX] === 1) {
+          messageEl.textContent = '⚠ Wall! Find another path.';
+          playSound(150, 0.1, 'sawtooth');
+          return;
+        }
+
+        // Move player
+        player.x = newX;
+        player.y = newY;
+        playSound(400, 0.05);
+
+        // Check dead ends
+        const deadEnd = deadEnds.find(
+          (de) => de.x === player.x && de.y === player.y,
+        );
+        if (deadEnd) {
+          messageEl.textContent = '⚠ ' + deadEnd.msg;
+          playSound(200, 0.2, 'triangle');
+        } else {
+          messageEl.textContent = '';
+        }
+
+        // Check if reached portal
+        if (player.x === portal.x && player.y === portal.y) {
+          gameWon = true;
+          messageEl.textContent =
+            "✓ YOU FOUND THE PORTAL! Click 'Back to Home' to return.";
+          playSound(523, 0.15);
+          setTimeout(() => playSound(659, 0.15), 150);
+          setTimeout(() => playSound(784, 0.3), 300);
+        }
+
+        drawGame();
+      }
+
+      function resetGame() {
+        player = { x: 0, y: 0 };
+        gameWon = false;
+        messageEl.textContent = '';
+        playSound(300, 0.1);
+        drawGame();
+      }
+
+      function toggleSound() {
+        initAudio();
+        soundEnabled = !soundEnabled;
+        document.getElementById('soundStatus').textContent = soundEnabled
+          ? 'ON'
+          : 'OFF';
+        if (soundEnabled) {
+          playSound(440, 0.1);
+        }
+      }
+
+      // Keyboard controls
+      document.addEventListener('keydown', (e) => {
+        switch (e.key.toLowerCase()) {
+          case 'arrowup':
+          case 'w':
+            e.preventDefault();
+            movePlayer(0, -1);
+            break;
+          case 'arrowdown':
+          case 's':
+            e.preventDefault();
+            movePlayer(0, 1);
+            break;
+          case 'arrowleft':
+          case 'a':
+            e.preventDefault();
+            movePlayer(-1, 0);
+            break;
+          case 'arrowright':
+          case 'd':
+            e.preventDefault();
+            movePlayer(1, 0);
+            break;
+        }
+      });
+
+      // Initialize game
+      drawGame();
+      messageEl.textContent =
+        'Navigate to the cyan portal in the bottom-right!';
+    </script>
+  </body>
+</html>
