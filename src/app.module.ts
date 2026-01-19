@@ -4,6 +4,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
@@ -43,6 +45,8 @@ import { validate } from './config/env.validation';
       inject: [ConfigService],
     }),
     PrismaModule,
+    UsersModule,
+    AuditLogsModule,
     RedisModule,
     AuthModule,
     CaslModule,
