@@ -100,15 +100,15 @@ export class AuthController {
   ) {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production', // False for localhost
+      sameSite: 'lax', // Compatible with localhost
       path: '/',
     });
 
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production', // False for localhost
+      sameSite: 'lax', // Compatible with localhost
       path: '/auth/refresh', // Scope refresh token to refresh endpoint
     });
   }
