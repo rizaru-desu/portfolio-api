@@ -5,6 +5,7 @@ import {
   Get,
   UseGuards,
   Req,
+  Res,
   HttpCode,
   HttpStatus,
   UnauthorizedException,
@@ -21,7 +22,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { TwoFactorService } from './services/two-factor.service';
 import { OtpService } from './services/otp.service';
 import { AuditLogService } from './services/audit-log.service';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -33,22 +34,48 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { user, tokens } = await this.authService.register(registerDto);
+    this.setCookies(response, tokens.accessToken, tokens.refreshToken);
+    return user;
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto, @Req() req: Request) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const ipAddress =
       (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress;
-    return this.authService.login(loginDto, ipAddress);
+    const result = await this.authService.login(loginDto, ipAddress);
+
+    if ('requires2FA' in result) {
+      return result;
+    }
+
+    const { user, tokens } = result;
+    this.setCookies(response, tokens.accessToken, tokens.refreshToken);
+    return user;
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshTokens(refreshTokenDto.refreshToken);
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+    const tokens = await this.authService.refreshTokens(refreshToken);
+    this.setCookies(response, tokens.accessToken, tokens.refreshToken);
+    return { message: 'Tokens refreshed' };
   }
 
   @Post('logout')
@@ -56,9 +83,34 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
     @CurrentUser() user: any,
-    @Body('refreshToken') refreshToken?: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
   ) {
+    const refreshToken = req.cookies['refresh_token'];
     await this.authService.logout(user.id, refreshToken);
+
+    response.clearCookie('access_token');
+    response.clearCookie('refresh_token');
+  }
+
+  private setCookies(
+    response: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    response.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/auth/refresh', // Scope refresh token to refresh endpoint
+    });
   }
 
   @Get('me')
